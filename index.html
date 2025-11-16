@@ -1,72 +1,77 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-  <title>AR Viewer Multi Modul</title>
-  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AR Module Viewer</title>
 
-  <style>
-    body { margin: 0; font-family: Arial; background: #111; color: white; }
-    #selector {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      padding: 10px;
-      background: rgba(0,0,0,0.6);
-      border-radius: 8px;
-      color: white;
-      border: 1px solid #444;
-    }
-    model-viewer {
-      width: 100vw;
-      height: 100vh;
-    }
-  </style>
+<script type="module" src="https://unpkg.com/@google/model-viewer@1.12.1/dist/model-viewer.min.js"></script>
+
+<style>
+  html, body { margin:0; padding:0; height:100%; overflow:hidden; background:#eaf4ff; }
+  model-viewer { width:100vw; height:100vh; background:#000; }
+  #tip {
+    position:fixed; left:12px; bottom:12px; padding:6px 10px; 
+    background:#ffffffcc; border-radius:8px; backdrop-filter:blur(4px); 
+    font-size:14px; color:#444;
+  }
+  .btn {
+    position:fixed; right:12px; padding:12px 16px; border:none; border-radius:8px;
+    background:#0b84ff; color:#fff; font-weight:bold; box-shadow:0 3px 6px rgba(0,0,0,0.2);
+  }
+  #arBtn { bottom:20px; }
+  #resetBtn { bottom:70px; background:#4b5563; }
+</style>
 </head>
+
 <body>
 
-  <select id="selector"></select>
+<div id="loading">Memuat model 3D...</div>
 
-  <model-viewer id="viewer"
-    ar
-    ar-modes="scene-viewer quick-look webxr"
-    auto-rotate
-    camera-controls
-    shadow-intensity="1">
-  </model-viewer>
+<model-viewer id="mv" src="" ios-src="" ar ar-modes="scene-viewer quick-look webxr"
+              auto-rotate camera-controls shadow-intensity="1" exposure="1.1">
+</model-viewer>
 
-  <script>
-    const selector = document.getElementById("selector");
-    const viewer = document.getElementById("viewer");
+<button id="resetBtn" class="btn" onclick="resetView()">Reset</button>
+<button id="arBtn" class="btn" onclick="openAR()">Lihat AR</button>
 
-    async function loadModels() {
-      // Ambil daftar file glb dari folder /models
-      const url = "/models/";
-      const res = await fetch(url);
-      const text = await res.text();
+<div id="tip">Ketuk & geser model untuk memutar / zoom</div>
 
-      // Extract nama file dari HTML auto-listing
-      const matches = [...text.matchAll(/href="([^"]+\.glb)"/g)];
+<script>
+const mv = document.getElementById('mv');
+const loading = document.getElementById('loading');
 
-      matches.forEach(m => {
-        const file = m[1];
-        const opt = document.createElement("option");
-        opt.value = "/models/" + file;
-        opt.textContent = file.replace(".glb", "");
-        selector.appendChild(opt);
-      });
+// Ambil nama modul dari query string ?modul=nama.glb
+const params = new URLSearchParams(window.location.search);
+const modulFile = params.get('modul');
 
-      // Set default
-      if (selector.options.length > 0) {
-        viewer.src = selector.options[0].value;
-      }
-    }
+if (modulFile) {
+  mv.src = modulFile;
+  // otomatis set ios-src ke .usdz jika ada
+  const usdz = modulFile.replace(/\.\w+$/, '.usdz');
+  mv.setAttribute('ios-src', usdz);
+}
 
-    selector.addEventListener("change", () => {
-      viewer.src = selector.value;
-    });
+// Event
+mv.addEventListener('load', () => { loading.style.display = 'none'; console.log("Model loaded"); });
+mv.addEventListener('error', (e) => { loading.innerText = "Gagal memuat model"; console.error("Load error", e); });
 
-    loadModels();
-  </script>
+// Fungsi tombol
+function resetView() {
+  mv.resetTurntableRotation();
+  mv.cameraTarget = '0m 0m 0m';
+  mv.cameraOrbit = '0deg 70deg 2.5m';
+}
+
+function openAR() {
+  try { 
+    if (mv.activateAR) mv.activateAR(); 
+    else mv.enterXR(); 
+  } catch(e) { console.error(e); }
+}
+</script>
 
 </body>
 </html>
+
+
