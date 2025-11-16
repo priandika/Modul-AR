@@ -3,17 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AR Module Viewer</title>
+<title>AR Module Viewer Android</title>
 
 <script type="module" src="https://unpkg.com/@google/model-viewer@1.12.1/dist/model-viewer.min.js"></script>
 
 <style>
   html, body { margin:0; padding:0; height:100%; overflow:hidden; background:#eaf4ff; }
   model-viewer { width:100vw; height:100vh; background:#000; }
-  #tip {
-    position:fixed; left:12px; bottom:12px; padding:6px 10px; 
-    background:#ffffffcc; border-radius:8px; backdrop-filter:blur(4px); 
-    font-size:14px; color:#444;
+  #loading {
+    position:fixed; top:50%; left:50%; transform:translate(-50%, -50%);
+    font-size:18px; color:#333; background:#ffffffcc; padding:8px 12px;
+    border-radius:8px; backdrop-filter:blur(4px);
   }
   .btn {
     position:fixed; right:12px; padding:12px 16px; border:none; border-radius:8px;
@@ -35,26 +35,34 @@
 <button id="resetBtn" class="btn" onclick="resetView()">Reset</button>
 <button id="arBtn" class="btn" onclick="openAR()">Lihat AR</button>
 
-<div id="tip">Ketuk & geser model untuk memutar / zoom</div>
-
 <script>
 const mv = document.getElementById('mv');
 const loading = document.getElementById('loading');
 
-// Ambil nama modul dari query string ?modul=nama.glb
+// Ambil modul dari query string ?modul=modul1.glb
 const params = new URLSearchParams(window.location.search);
 const modulFile = params.get('modul');
 
 if (modulFile) {
   mv.src = modulFile;
-  // otomatis set ios-src ke .usdz jika ada
   const usdz = modulFile.replace(/\.\w+$/, '.usdz');
   mv.setAttribute('ios-src', usdz);
 }
 
-// Event
-mv.addEventListener('load', () => { loading.style.display = 'none'; console.log("Model loaded"); });
-mv.addEventListener('error', (e) => { loading.innerText = "Gagal memuat model"; console.error("Load error", e); });
+// Event load/error untuk ekstensi Kodular
+mv.addEventListener('load', () => {
+  loading.style.display = 'none';
+  if(window.AndroidBridge && AndroidBridge.onModelLoaded) {
+    AndroidBridge.onModelLoaded();
+  }
+});
+
+mv.addEventListener('error', (e) => {
+  loading.innerText = "Gagal memuat model";
+  if(window.AndroidBridge && AndroidBridge.onLoadError) {
+    AndroidBridge.onLoadError("Gagal memuat model");
+  }
+});
 
 // Fungsi tombol
 function resetView() {
@@ -65,9 +73,16 @@ function resetView() {
 
 function openAR() {
   try { 
-    if (mv.activateAR) mv.activateAR(); 
+    if(mv.activateAR) mv.activateAR(); 
     else mv.enterXR(); 
-  } catch(e) { console.error(e); }
+    if(window.AndroidBridge && AndroidBridge.onARStarted) {
+      AndroidBridge.onARStarted();
+    }
+  } catch(e) {
+    if(window.AndroidBridge && AndroidBridge.onARFailed) {
+      AndroidBridge.onARFailed(e.message);
+    }
+  }
 }
 </script>
 
