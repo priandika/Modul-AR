@@ -3,90 +3,50 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AR Module Viewer Android</title>
-
-<script type="module" src="https://unpkg.com/@google/model-viewer@1.12.1/dist/model-viewer.min.js"></script>
-
+<title>AR Multi-Modul Viewer</title>
+<script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
 <style>
-  html, body { margin:0; padding:0; height:100%; overflow:hidden; background:#eaf4ff; }
-  model-viewer { width:100vw; height:100vh; background:#000; }
-  #loading {
-    position:fixed; top:50%; left:50%; transform:translate(-50%, -50%);
-    font-size:18px; color:#333; background:#ffffffcc; padding:8px 12px;
-    border-radius:8px; backdrop-filter:blur(4px);
+  body { margin:0; overflow:hidden; background:#eaf4ff; font-family:sans-serif; }
+  model-viewer { width:100vw; height:100vh; }
+  #arBtn {
+    position: fixed; right: 12px; bottom: 12px; padding: 12px 16px;
+    border-radius: 8px; background:#0b84ff; color:#fff; border:none; font-weight:bold;
   }
-  .btn {
-    position:fixed; right:12px; padding:12px 16px; border:none; border-radius:8px;
-    background:#0b84ff; color:#fff; font-weight:bold; box-shadow:0 3px 6px rgba(0,0,0,0.2);
+  #tip {
+    position: fixed; left:12px; bottom: 12px; background:#ffffffcc; padding:6px 10px; border-radius:8px;
+    backdrop-filter: blur(4px); font-size:14px; color:#444;
   }
-  #arBtn { bottom:20px; }
-  #resetBtn { bottom:70px; background:#4b5563; }
 </style>
 </head>
-
 <body>
 
-<div id="loading">Memuat model 3D...</div>
-
-<model-viewer id="mv" src="" ios-src="" ar ar-modes="scene-viewer quick-look webxr"
-              auto-rotate camera-controls shadow-intensity="1" exposure="1.1">
-</model-viewer>
-
-<button id="resetBtn" class="btn" onclick="resetView()">Reset</button>
-<button id="arBtn" class="btn" onclick="openAR()">Lihat AR</button>
+<div id="tip">Ketuk & geser model untuk memutar / zoom</div>
+<model-viewer id="mv" ar camera-controls auto-rotate shadow-intensity="1"></model-viewer>
+<button id="arBtn">Lihat AR</button>
 
 <script>
-const mv = document.getElementById('mv');
-const loading = document.getElementById('loading');
+  // Ambil modul dari query parameter, default "default.glb"
+  const params = new URLSearchParams(window.location.search);
+  const modulFile = params.get("file") || "default.glb";
 
-// Ambil modul dari query string ?modul=modul1.glb
-const params = new URLSearchParams(window.location.search);
-const modulFile = params.get('modul');
-
-if (modulFile) {
+  const mv = document.getElementById('mv');
   mv.src = modulFile;
-  const usdz = modulFile.replace(/\.\w+$/, '.usdz');
-  mv.setAttribute('ios-src', usdz);
-}
+  mv.iosSrc = modulFile.replace(/\.\w+$/, '.usdz');
 
-// Event load/error untuk ekstensi Kodular
-mv.addEventListener('load', () => {
-  loading.style.display = 'none';
-  if(window.AndroidBridge && AndroidBridge.onModelLoaded) {
-    AndroidBridge.onModelLoaded();
-  }
-});
+  mv.addEventListener('load',()=>{ console.log('Model loaded'); });
+  mv.addEventListener('error',(e)=>{ console.log('Load error'); });
 
-mv.addEventListener('error', (e) => {
-  loading.innerText = "Gagal memuat model";
-  if(window.AndroidBridge && AndroidBridge.onLoadError) {
-    AndroidBridge.onLoadError("Gagal memuat model");
-  }
-});
-
-// Fungsi tombol
-function resetView() {
-  mv.resetTurntableRotation();
-  mv.cameraTarget = '0m 0m 0m';
-  mv.cameraOrbit = '0deg 70deg 2.5m';
-}
-
-function openAR() {
-  try { 
-    if(mv.activateAR) mv.activateAR(); 
-    else mv.enterXR(); 
-    if(window.AndroidBridge && AndroidBridge.onARStarted) {
-      AndroidBridge.onARStarted();
+  // Tombol Lihat AR
+  document.getElementById('arBtn').addEventListener('click', ()=>{
+    if (mv.enterXR) {
+      mv.enterXR().then(()=>console.log('AR started')).catch(err=>console.log('AR failed', err.message));
     }
-  } catch(e) {
-    if(window.AndroidBridge && AndroidBridge.onARFailed) {
-      AndroidBridge.onARFailed(e.message);
-    }
-  }
-}
+  });
 </script>
 
 </body>
 </html>
+
+
 
 
