@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AR Viewer Multi Modul</title>
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+
+  <style>
+    body { margin: 0; font-family: Arial; background: #111; color: white; }
+    #selector {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      padding: 10px;
+      background: rgba(0,0,0,0.6);
+      border-radius: 8px;
+      color: white;
+      border: 1px solid #444;
+    }
+    model-viewer {
+      width: 100vw;
+      height: 100vh;
+    }
+  </style>
+</head>
+<body>
+
+  <select id="selector"></select>
+
+  <model-viewer id="viewer"
+    ar
+    ar-modes="scene-viewer quick-look webxr"
+    auto-rotate
+    camera-controls
+    shadow-intensity="1">
+  </model-viewer>
+
+  <script>
+    const selector = document.getElementById("selector");
+    const viewer = document.getElementById("viewer");
+
+    async function loadModels() {
+      // Ambil daftar file glb dari folder /models
+      const url = "/models/";
+      const res = await fetch(url);
+      const text = await res.text();
+
+      // Extract nama file dari HTML auto-listing
+      const matches = [...text.matchAll(/href="([^"]+\.glb)"/g)];
+
+      matches.forEach(m => {
+        const file = m[1];
+        const opt = document.createElement("option");
+        opt.value = "/models/" + file;
+        opt.textContent = file.replace(".glb", "");
+        selector.appendChild(opt);
+      });
+
+      // Set default
+      if (selector.options.length > 0) {
+        viewer.src = selector.options[0].value;
+      }
+    }
+
+    selector.addEventListener("change", () => {
+      viewer.src = selector.value;
+    });
+
+    loadModels();
+  </script>
+
+</body>
+</html>
