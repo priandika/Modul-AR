@@ -1,71 +1,103 @@
 <!DOCTYPE html>
-<html lang="id">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AR Multi-Modul Viewer</title>
-<script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
-<style>
-  body { margin:0; overflow:hidden; background:#eaf4ff; font-family:sans-serif; }
-  model-viewer { width:100vw; height:100vh; }
-  #loading {
-    position: fixed; top:50%; left:50%; transform: translate(-50%, -50%);
-    font-size:18px; color:#333;
-  }
-  #arBtn {
-    position: fixed; right: 12px; bottom: 12px; padding: 12px 16px;
-    border-radius: 8px; background:#0b84ff; color:#fff; border:none; font-weight:bold;
-  }
-  #tip {
-    position: fixed; left:12px; bottom: 12px; background:#ffffffcc; padding:6px 10px; border-radius:8px;
-    backdrop-filter: blur(4px); font-size:14px; color:#444;
-  }
-</style>
+  <meta charset="utf-8">
+  <title>AR Multi Modul</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+  <style>
+    body { margin: 0; overflow: hidden; background: #eaf4ff; }
+    model-viewer { width: 100vw; height: 100vh; }
+
+    #loading {
+      position: fixed; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 18px; color: #333;
+      background: rgba(255,255,255,0.8);
+      padding: 10px 20px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Spinner animation */
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #0b84ff;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    #arBtn {
+      position: fixed; bottom: 20px; right: 20px;
+      padding: 12px 18px; background: #0b84ff; color: white;
+      border: none; border-radius: 8px; font-weight: bold;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.3); cursor: pointer;
+    }
+  </style>
 </head>
 <body>
 
-<div id="loading">Memuat model 3D...</div>
-<div id="tip">Ketuk & geser model untuk memutar / zoom</div>
+<div id="loading">
+  <div class="spinner"></div>
+  Memuat modul 3D...
+</div>
 
 <model-viewer id="mv" ar camera-controls auto-rotate shadow-intensity="1"></model-viewer>
 <button id="arBtn">Lihat AR</button>
 
 <script>
-  // Ambil modul dari query parameter
   const params = new URLSearchParams(window.location.search);
-  const modulFile = params.get("file") || "default.glb";
+  const modulFile = params.get('file') || 'default.glb';
 
   const mv = document.getElementById('mv');
-  mv.src = modulFile;
-  mv.iosSrc = modulFile.replace(/\.\w+$/, '.usdz');
+  const loading = document.getElementById('loading');
 
-  // Event load & error
-  mv.addEventListener('load', ()=>{
-    document.getElementById('loading').style.display = 'none';
-    console.log('Model loaded');
-    if (window.AndroidBridge && AndroidBridge.onModelLoaded) {
+  mv.src = modulFile;
+  mv.iosSrc = modulFile.replace(/\.(glb|gltf)$/i, '.usdz');
+
+  // Event load/error
+  mv.addEventListener('load', () => {
+    loading.style.display = 'none'; // hide spinner
+    if(window.AndroidBridge && AndroidBridge.onModelLoaded) {
       AndroidBridge.onModelLoaded();
     }
   });
 
-  mv.addEventListener('error', (e)=>{
-    document.getElementById('loading').style.display = 'none';
-    console.log('Load error', e);
-    if (window.AndroidBridge && AndroidBridge.onLoadError) {
-      AndroidBridge.onLoadError('Gagal memuat model');
+  mv.addEventListener('error', () => {
+    loading.style.display = 'none';
+    if(window.AndroidBridge && AndroidBridge.onLoadError) {
+      AndroidBridge.onLoadError('Model gagal dimuat');
     }
   });
 
-  // Tombol Lihat AR
-  document.getElementById('arBtn').addEventListener('click', ()=>{
+  // Model tapped
+  mv.addEventListener('click', () => {
+    if(window.AndroidBridge && AndroidBridge.onModelTapped) {
+      AndroidBridge.onModelTapped();
+    }
+  });
+
+  // Tombol AR
+  document.getElementById('arBtn').addEventListener('click', () => {
     try {
-      if (mv.enterXR) {
-        mv.enterXR()
-          .then(()=>{ if(window.AndroidBridge && AndroidBridge.onARStarted) AndroidBridge.onARStarted(); })
-          .catch(err=>{ if(window.AndroidBridge && AndroidBridge.onARFailed) AndroidBridge.onARFailed(err.message); });
+      mv.activateAR ? mv.activateAR() : mv.enterXR();
+      if(window.AndroidBridge && AndroidBridge.onARStarted){
+        AndroidBridge.onARStarted();
       }
     } catch(e) {
-      if(window.AndroidBridge && AndroidBridge.onARFailed) AndroidBridge.onARFailed(e.message);
+      if(window.AndroidBridge && AndroidBridge.onARFailed){
+        AndroidBridge.onARFailed(e.message);
+      }
+      console.log(e.message);
     }
   });
 </script>
