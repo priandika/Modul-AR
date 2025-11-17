@@ -42,7 +42,17 @@
 </div>
 
 <!-- Tambahkan model-viewer tanpa tombol AR -->
-<model-viewer id="mv" ar camera-controls auto-rotate shadow-intensity="1"></model-viewer>
+<model-viewer id="mv" 
+              ar 
+              camera-controls 
+              auto-rotate 
+              shadow-intensity="1"
+              disable-zoom
+              disable-pan
+              disable-interaction
+              disable-ar
+              style="width: 100%; height: 100vh;">
+</model-viewer>
 
 <script>
   const params = new URLSearchParams(window.location.search);
@@ -74,6 +84,7 @@
 
 </body>
 </html>
+
 
 
 
