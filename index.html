@@ -82,12 +82,9 @@
   // Tombol untuk memulai AR
   document.getElementById('arBtn').addEventListener('click', () => {
     try {
-      // Coba aktifkan mode AR menggunakan metode yang tepat
-      if (mv.activateAR) {
-        mv.activateAR();  // Coba gunakan activateAR() untuk WebXR support
-      } else if (mv.enterXR) {
-        mv.enterXR();     // Fallback untuk ARCore/WebXR
-      }
+      // Mengarahkan ke Google AR Viewer atau aplikasi eksternal
+      const arUrl = `https://arvr.google.com/scene-viewer/1.0?url=${encodeURIComponent(modulFile)}`;
+      window.location.href = arUrl; // Arahkan ke eksternal untuk membuka AR
 
       if (window.AndroidBridge && AndroidBridge.onARStarted) {
         AndroidBridge.onARStarted();
@@ -103,6 +100,7 @@
 
 </body>
 </html>
+
 
 
 
