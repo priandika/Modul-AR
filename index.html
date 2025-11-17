@@ -45,46 +45,67 @@
 <body>
 
 <div id="loading">
-  <div class="spinner"></div> Memuat modul 3D...
+  <div class="spinner"></div> Memuat modul...
 </div>
 
-<model-viewer id="mv" ar camera-controls auto-rotate shadow-intensity="1"></model-viewer>
-<button id="arBtn">Lihat AR</button>
+<button id="arBtn" style="position: absolute; bottom: 10px; right: 10px; background: #0b84ff; color: white; padding: 12px 16px; border-radius: 8px; font-weight: bold; border: none;">
+    Lihat AR
+</button>
 
 <script>
-const params = new URLSearchParams(window.location.search);
-const modulFile = params.get('modul') || 'default.glb';
+  const params = new URLSearchParams(window.location.search);
+  const modulFile = params.get('modul') || 'default.glb';
 
-const mv = document.getElementById('mv');
-const loading = document.getElementById('loading');
+  const mv = document.getElementById('mv');
+  const loading = document.getElementById('loading');
 
-// Set modul
-mv.src = modulFile;
-mv.iosSrc = modulFile.replace(/\.(glb|gltf)$/i,'.usdz');
+  // Set model-viewer properties
+  mv.src = modulFile;
+  mv.iosSrc = modulFile.replace(/\.(glb|gltf)$/i, '.usdz');
 
-// Event load / error
-mv.addEventListener('load', () => {
-  loading.style.display = 'none';
-  if(window.AndroidBridge && AndroidBridge.onModelLoaded) AndroidBridge.onModelLoaded();
-});
+  mv.addEventListener('load', () => {
+    loading.style.display = 'none'; // hide spinner
+    if(window.AndroidBridge && AndroidBridge.onModelLoaded) {
+      AndroidBridge.onModelLoaded();
+    }
+  });
 
-mv.addEventListener('error', () => {
-  loading.style.display = 'none';
-  if(window.AndroidBridge && AndroidBridge.onLoadError) AndroidBridge.onLoadError('Model gagal dimuat');
-});
+  mv.addEventListener('error', () => {
+    loading.style.display = 'none';
+    if(window.AndroidBridge && AndroidBridge.onLoadError) {
+      AndroidBridge.onLoadError('Model gagal dimuat');
+    }
+  });
 
-// Model tapped
-mv.addEventListener('click', () => {
-  if(window.AndroidBridge && AndroidBridge.onModelTapped) AndroidBridge.onModelTapped();
-});
+  // Model tapped event
+  mv.addEventListener('click', () => {
+    if(window.AndroidBridge && AndroidBridge.onModelTapped) {
+      AndroidBridge.onModelTapped();
+    }
+  });
 
-// Tombol AR buka browser / scene viewer
-document.getElementById('arBtn').addEventListener('click', () => {
-  const arUrl = modulFile; // langsung file URL
-  window.open(arUrl, '_blank'); // buka browser
-  if(window.AndroidBridge && AndroidBridge.onARStarted) AndroidBridge.onARStarted();
-});
+  // Button to activate AR
+  document.getElementById('arBtn').addEventListener('click', () => {
+    try {
+      // Try to activate AR mode using the right method
+      if (mv.activateAR) {
+        mv.activateAR();  // Attempt to use activateAR() for WebXR support
+      } else if (mv.enterXR) {
+        mv.enterXR();     // Fallback for ARCore/WebXR
+      }
+
+      if (window.AndroidBridge && AndroidBridge.onARStarted) {
+        AndroidBridge.onARStarted();
+      }
+    } catch (e) {
+      if (window.AndroidBridge && AndroidBridge.onARFailed) {
+        AndroidBridge.onARFailed(e.message);
+      }
+      console.log('AR error:', e.message);
+    }
+  });
 </script>
 
 </body>
 </html>
+
