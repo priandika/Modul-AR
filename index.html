@@ -41,18 +41,10 @@
   <div class="spinner"></div>
 </div>
 
-<!-- Tambahkan model-viewer tanpa tombol AR -->
-<model-viewer id="mv" 
-              ar 
-              camera-controls 
-              auto-rotate 
-              shadow-intensity="1"
-              disable-zoom
-              disable-pan
-              disable-interaction
-              disable-ar
-              style="width: 100%; height: 100vh;">
-</model-viewer>
+<!-- Tambahkan model-viewer -->
+<model-viewer id="mv" ar camera-controls auto-rotate shadow-intensity="1"></model-viewer>
+
+<button id="arBtn">Lihat AR</button>
 
 <script>
   const params = new URLSearchParams(window.location.search);
@@ -80,19 +72,23 @@
       AndroidBridge.onLoadError('Model gagal dimuat');
     }
   });
-  // Mencegah tombol AR bawaan dan menggantinya dengan fungsi custom
-  mv.addEventListener('ar-status', (e) => {
-    if (e.detail.status === "available") {
-      // Modifikasi klik tombol AR bawaan agar mengarah ke Google AR
-      const arUrl = `https://arvr.google.com/scene-viewer/1.0?url=${encodeURIComponent(modulFile)}`;
-      window.location.href = arUrl; // Mengarahkan ke Google AR viewer
-    }
-  });
+// Tombol untuk memulai AR document.getElementById('arBtn').addEventListener('click', () => { 
+  try { 
+    // Coba aktifkan mode AR menggunakan metode yang tepat 
+    if (mv.activateAR) { mv.activateAR();
+        // Coba gunakan activateAR() untuk WebXR support 
+     } else if (mv.enterXR) { 
+      mv.enterXR(); 
+      // Fallback untuk ARCore/WebXR 
+    } 
+    if (window.AndroidBridge && AndroidBridge.onARStarted) { AndroidBridge.onARStarted(); } } catch (e) { console.error('AR error:', e.message); 
+  if (window.AndroidBridge && AndroidBridge.onARFailed) { AndroidBridge.onARFailed(e.message); } } });
 
 </script>
 
 </body>
 </html>
+
 
 
 
