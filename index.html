@@ -33,12 +33,19 @@
     }
 
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    #arBtn {
+      position: fixed; bottom: 20px; right: 20px;
+      padding: 12px 18px; background: #0b84ff; color: white;
+      border: none; border-radius: 8px; font-weight: bold;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3); cursor: pointer;
+    }
   </style>
 </head>
 <body>
 
 <div id="loading">
-  <div class="spinner"></div>
+  <div class="spinner"></div> Memuat modul...
 </div>
 
 <!-- Tambahkan model-viewer -->
@@ -72,36 +79,31 @@
       AndroidBridge.onLoadError('Model gagal dimuat');
     }
   });
-// Tombol untuk memulai AR document.getElementById('arBtn').addEventListener('click', () => { 
-  try { 
-    // Coba aktifkan mode AR menggunakan metode yang tepat 
-    if (mv.activateAR) { mv.activateAR();
-        // Coba gunakan activateAR() untuk WebXR support 
-     } else if (mv.enterXR) { 
-      mv.enterXR(); 
-      // Fallback untuk ARCore/WebXR 
-    } 
-    if (window.AndroidBridge && AndroidBridge.onARStarted) { AndroidBridge.onARStarted(); } } catch (e) { console.error('AR error:', e.message); 
-  if (window.AndroidBridge && AndroidBridge.onARFailed) { AndroidBridge.onARFailed(e.message); } } });
 
+  // Tombol untuk memulai AR
+  document.getElementById('arBtn').addEventListener('click', () => {
+    try {
+      // Coba aktifkan mode AR menggunakan metode yang tepat
+      if (mv.activateAR) {
+        mv.activateAR();  // Coba gunakan activateAR() untuk WebXR support
+      } else if (mv.enterXR) {
+        mv.enterXR();     // Fallback untuk ARCore/WebXR
+      }
+
+      if (window.AndroidBridge && AndroidBridge.onARStarted) {
+        AndroidBridge.onARStarted();
+      }
+    } catch (e) {
+      console.error('AR error:', e.message);
+      if (window.AndroidBridge && AndroidBridge.onARFailed) {
+        AndroidBridge.onARFailed(e.message);
+      }
+    }
+  });
 </script>
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
