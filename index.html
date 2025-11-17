@@ -1,83 +1,80 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="utf-8">
-<title>AR Multi Modul</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf-8">
+  <title>AR Multi Modul</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<!-- Gunakan versi UMD agar WebView support -->
-<script src="https://unpkg.com/@google/model-viewer/dist/model-viewer-umd.min.js"></script>
+  <!-- Gunakan versi UMD agar WebView support -->
+  <script src="https://unpkg.com/@google/model-viewer/dist/model-viewer-umd.min.js"></script>
 
-<style>
-  body { margin:0; overflow:hidden; background:#eaf4ff; }
-  model-viewer { width:100vw; height:100vh; }
+  <style>
+    body { margin: 0; overflow: hidden; background: #eaf4ff; }
+    model-viewer { width: 100vw; height: 100vh; }
 
-  #loading {
-    position: fixed; top:50%; left:50%;
-    transform: translate(-50%, -50%);
-    font-size: 40px; color:#333;
-    background: rgba(255,255,255,0.8);
-    padding: 10px 20px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    gap:10px;
-  }
+    #loading {
+      position: fixed; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 40px; color: #333;
+      background: rgba(255, 255, 255, 0.8);
+      padding: 10px 20px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
 
-  .spinner {
-    border:4px solid #f3f3f3;
-    border-top:4px solid #0b84ff;
-    border-radius:50%;
-    width:50px; height:50px;
-    animation: spin 1s linear infinite;
-  }
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #0b84ff;
+      border-radius: 50%;
+      width: 50px; height: 50px;
+      animation: spin 1s linear infinite;
+    }
 
-  @keyframes spin { 0%{transform:rotate(0deg);} 100%{transform:rotate(360deg);} }
-
-  #arBtn {
-    position: fixed; bottom:20px; right:20px;
-    padding: 12px 18px; background:#0b84ff; color:white;
-    border:none; border-radius:8px; font-weight:bold;
-    box-shadow:0 3px 10px rgba(0,0,0,0.3); cursor:pointer;
-  }
-</style>
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  </style>
 </head>
 <body>
 
 <div id="loading">
-  <div class="spinner"></div><br>Memuat modul...
+  <div class="spinner"></div>
 </div>
 
+<!-- Tambahkan model-viewer tanpa tombol AR -->
+<model-viewer id="mv" ar camera-controls auto-rotate shadow-intensity="1"></model-viewer>
+
 <script>
-const params = new URLSearchParams(window.location.search);
-const modulFile = params.get('modul') || 'default.glb';
+  const params = new URLSearchParams(window.location.search);
+  const modulFile = params.get('modul') || 'default.glb';  // Ambil parameter 'modul' dari URL
 
-const mv = document.getElementById('mv');
-const loading = document.getElementById('loading');
+  const mv = document.getElementById('mv');
+  const loading = document.getElementById('loading');
 
-// Set modul
-mv.src = modulFile;
-mv.iosSrc = modulFile.replace(/\.(glb|gltf)$/i,'.usdz');
+  // Set model-viewer properties
+  mv.src = modulFile;  // URL model 3D (glb)
+  mv.iosSrc = modulFile.replace(/\.(glb|gltf)$/i, '.usdz'); // Ubah ke format USDZ untuk iOS
 
-// Event load / error
-mv.addEventListener('load', () => {
-  loading.style.display = 'none';
-  if(window.AndroidBridge && AndroidBridge.onModelLoaded) AndroidBridge.onModelLoaded();
-});
+  mv.addEventListener('load', () => {
+    loading.style.display = 'none';  // Sembunyikan spinner setelah model dimuat
+    console.log('Model berhasil dimuat');
+    if (window.AndroidBridge && AndroidBridge.onModelLoaded) {
+      AndroidBridge.onModelLoaded();
+    }
+  });
 
-mv.addEventListener('error', () => {
-  loading.style.display = 'none';
-  if(window.AndroidBridge && AndroidBridge.onLoadError) AndroidBridge.onLoadError('Model gagal dimuat');
-});
-
-// Model tapped
-mv.addEventListener('click', () => {
-  if(window.AndroidBridge && AndroidBridge.onModelTapped) AndroidBridge.onModelTapped();
-});
+  mv.addEventListener('error', () => {
+    loading.style.display = 'none';
+    console.error('Model gagal dimuat');
+    if (window.AndroidBridge && AndroidBridge.onLoadError) {
+      AndroidBridge.onLoadError('Model gagal dimuat');
+    }
+  });
 </script>
 
 </body>
 </html>
+
 
 
 
