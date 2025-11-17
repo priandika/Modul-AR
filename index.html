@@ -80,10 +80,30 @@
       AndroidBridge.onLoadError('Model gagal dimuat');
     }
   });
+  document.getElementById('arBtn').addEventListener('click', () => {
+    try {
+        // Gunakan URL AR yang benar dan model yang bisa diakses
+        const arUrl = `https://arvr.google.com/scene-viewer/1.0?url=${encodeURIComponent(modulFile)}`;
+
+        // Buka URL AR di browser eksternal
+        window.open(arUrl, '_blank'); // Membuka URL di tab baru di browser
+
+        if (window.AndroidBridge && AndroidBridge.onARStarted) {
+            AndroidBridge.onARStarted();
+        }
+    } catch (e) {
+        console.error('AR error:', e.message);
+        if (window.AndroidBridge && AndroidBridge.onARFailed) {
+            AndroidBridge.onARFailed(e.message);
+        }
+    }
+});
+
 </script>
 
 </body>
 </html>
+
 
 
 
