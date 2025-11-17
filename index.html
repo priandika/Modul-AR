@@ -1,108 +1,90 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
-  <title>AR Multi Modul</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
-  <style>
-    body { margin: 0; overflow: hidden; background: #eaf4ff; }
-    model-viewer { width: 100vw; height: 100vh; }
+<meta charset="utf-8">
+<title>AR Multi Modul</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-    #loading {
-      position: fixed; top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 60px; color: #333;
-      background: rgba(255,255,255,0.8);
-      padding: 10px 20px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
+<!-- Gunakan versi UMD agar WebView support -->
+<script src="https://unpkg.com/@google/model-viewer/dist/model-viewer-umd.min.js"></script>
 
-    /* Spinner animation */
-    .spinner {
-      border: 4px solid #f3f3f3;
-      border-top: 4px solid #0b84ff;
-      border-radius: 50%;
-      width: 70px;
-      height: 70px;
-      animation: spin 1s linear infinite;
-    }
+<style>
+  body { margin:0; overflow:hidden; background:#eaf4ff; }
+  model-viewer { width:100vw; height:100vh; }
 
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
+  #loading {
+    position: fixed; top:50%; left:50%;
+    transform: translate(-50%, -50%);
+    font-size: 40px; color:#333;
+    background: rgba(255,255,255,0.8);
+    padding: 10px 20px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap:10px;
+  }
 
-    #arBtn {
-      position: fixed; bottom: 20px; right: 20px;
-      padding: 12px 18px; background: #0b84ff; color: white;
-      border: none; border-radius: 8px; font-weight: bold;
-      box-shadow: 0 3px 10px rgba(0,0,0,0.3); cursor: pointer;
-    }
-  </style>
+  .spinner {
+    border:4px solid #f3f3f3;
+    border-top:4px solid #0b84ff;
+    border-radius:50%;
+    width:50px; height:50px;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin { 0%{transform:rotate(0deg);} 100%{transform:rotate(360deg);} }
+
+  #arBtn {
+    position: fixed; bottom:20px; right:20px;
+    padding: 12px 18px; background:#0b84ff; color:white;
+    border:none; border-radius:8px; font-weight:bold;
+    box-shadow:0 3px 10px rgba(0,0,0,0.3); cursor:pointer;
+  }
+</style>
 </head>
 <body>
 
 <div id="loading">
-  <div class="spinner"></div>
-  Memuat modul 3D...
+  <div class="spinner"></div> Memuat modul 3D...
 </div>
 
 <model-viewer id="mv" ar camera-controls auto-rotate shadow-intensity="1"></model-viewer>
 <button id="arBtn">Lihat AR</button>
 
 <script>
-  const params = new URLSearchParams(window.location.search);
-  const modulFile = params.get('modul') || 'default.glb';
+const params = new URLSearchParams(window.location.search);
+const modulFile = params.get('modul') || 'default.glb';
 
-  const mv = document.getElementById('mv');
-  const loading = document.getElementById('loading');
+const mv = document.getElementById('mv');
+const loading = document.getElementById('loading');
 
-  mv.src = modulFile;
-  mv.iosSrc = modulFile.replace(/\.(glb|gltf)$/i, '.usdz');
+// Set modul
+mv.src = modulFile;
+mv.iosSrc = modulFile.replace(/\.(glb|gltf)$/i,'.usdz');
 
-  // Event load/error
-  mv.addEventListener('load', () => {
-    loading.style.display = 'none'; // hide spinner
-    if(window.AndroidBridge && AndroidBridge.onModelLoaded) {
-      AndroidBridge.onModelLoaded();
-    }
-  });
+// Event load / error
+mv.addEventListener('load', () => {
+  loading.style.display = 'none';
+  if(window.AndroidBridge && AndroidBridge.onModelLoaded) AndroidBridge.onModelLoaded();
+});
 
-  mv.addEventListener('error', () => {
-    loading.style.display = 'none';
-    if(window.AndroidBridge && AndroidBridge.onLoadError) {
-      AndroidBridge.onLoadError('Model gagal dimuat');
-    }
-  });
+mv.addEventListener('error', () => {
+  loading.style.display = 'none';
+  if(window.AndroidBridge && AndroidBridge.onLoadError) AndroidBridge.onLoadError('Model gagal dimuat');
+});
 
-  // Model tapped
-  mv.addEventListener('click', () => {
-    if(window.AndroidBridge && AndroidBridge.onModelTapped) {
-      AndroidBridge.onModelTapped();
-    }
-  });
+// Model tapped
+mv.addEventListener('click', () => {
+  if(window.AndroidBridge && AndroidBridge.onModelTapped) AndroidBridge.onModelTapped();
+});
 
-  // Tombol AR
-  document.getElementById('arBtn').addEventListener('click', () => {
-    try {
-      mv.activateAR ? mv.activateAR() : mv.enterXR();
-      if(window.AndroidBridge && AndroidBridge.onARStarted){
-        AndroidBridge.onARStarted();
-      }
-    } catch(e) {
-      if(window.AndroidBridge && AndroidBridge.onARFailed){
-        AndroidBridge.onARFailed(e.message);
-      }
-      console.log(e.message);
-    }
-  });
+// Tombol AR buka browser / scene viewer
+document.getElementById('arBtn').addEventListener('click', () => {
+  const arUrl = modulFile; // langsung file URL
+  window.open(arUrl, '_blank'); // buka browser
+  if(window.AndroidBridge && AndroidBridge.onARStarted) AndroidBridge.onARStarted();
+});
 </script>
 
 </body>
 </html>
-
-
